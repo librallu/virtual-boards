@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+
+{% block title %}Board {{board.name}}{% endblock %}
+
+{% block content %}
+    <h1>board:{{board.name}}</h1>
+    <ul>
+       {% for col in columns %}
+        <li><a href="/{{board.id}}/{{col.id}}/">{{col.name}}</a></li>
+       {% endfor %}
+    </ul>
+{% endblock %}

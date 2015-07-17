@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+
+{% block title %}ORG app Main page{% endblock %}
+
+{% block content %}
+    <h1>Hello world !</h1>
+    <ul>
+    {% for board in boards %}
+        <li><a href="/{{board.id}}/">{{board.name}}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}

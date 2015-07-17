@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+
+{% block title %}Board {{board.name}}&gt;{{column.name}}&gt;{{note.name}}{% endblock %}
+
+{% block content %}
+    <h1>{{board.name}}&gt;{{column.name}}&gt;{{note.name}}</h1>
+    <p>
+        {{note.text}}
+    </p>
+{% endblock %}

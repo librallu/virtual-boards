@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+{% block title %}Board {{board.name}}&gt;{{column.name}}{% endblock %}
+
+{% block content %}
+    <h1>{{board.name}}&gt;{{column.name}}</h1>
+    
+    <ul>
+       {% for note in notes %}
+        <li><a href="/{{board.id}}/{{column.id}}/{{note.id}}/">{{note.name}}</a></li>
+       {% endfor %}
+    </ul>
+{% endblock %}
