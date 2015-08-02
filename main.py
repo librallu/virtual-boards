@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from flask import Flask, request, current_app, make_response, abort, render_template, jsonify
+from flask import Flask, request, current_app, make_response, abort, render_template, jsonify, redirect
 from flask.ext.script import Manager, Shell
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.migrate import Migrate, MigrateCommand
@@ -87,29 +87,39 @@ class AllREST(Resource):
     @staticmethod
     def to_json():
         """
-        :return: all the database
+        :return: all the database at json format
         """
         boards = Board.query.all()
         return {
             'boards': [BoardREST.to_json(i) for i in boards]   
         }
     
-    def get(self):
+    @staticmethod
+    def get():
+        """
+        get the database content
+        """
         request_type = request.args.get('type', '')
         if request_type == 'json':
-            return jsonify(self.to_json())
+            return jsonify(AllREST.to_json())
         else:
             boards = Board.query.all()
             return make_response(render_template('index.html', boards=boards))
-        
     
-    def post(self):
+    @staticmethod
+    def post_operation():
+        """
+        Create a new board
+        """
         args = parser.parse_args()
         board_obj = Board(name=args['name'])
         db.session.add(board_obj)
         db.session.commit()
-        return BoardREST.to_json(board_obj), 201
+        return AllREST.get()
         
+    @staticmethod
+    def post():
+        return AllREST.post_operation()
 
 
 class BoardREST(Resource):
@@ -129,32 +139,53 @@ class BoardREST(Resource):
             'columns': [ColumnREST.to_json(i) for i in columns]
         }
         
-    def get(self, board):
-        board_object = Board.query.get_or_404(board)
-        columns = Column.query.filter_by(board=board_object)
+    @staticmethod
+    def get(board_id):
+        board = Board.query.get_or_404(board_id)
+        columns = Column.query.filter_by(board=board)
         
         request_type = request.args.get('type', '')
         if request_type == 'json':
-            return jsonify(self.to_json(board_object, columns))
+            return jsonify(BoardREST.to_json(board, columns))
         else:  # HTML view
-            return make_response(render_template('board.html', board=board_object, columns=columns))
+            return make_response(render_template('board.html', board=board, columns=columns))
 
-    def post(self, board):
-        board_object = Board.query.get_or_404(board)
+    @staticmethod
+    def post_operation(board_id):
+        board = Board.query.get_or_404(board_id)
         args = parser.parse_args()
-        col_obj = Column(name=args['name'], board_id=board)
+        col_obj = Column(name=args['name'], board_id=board_id)
         db.session.add(col_obj)
         db.session.commit()
-        return ColumnREST.to_json(col_obj), 201
+        return BoardREST.get(board_id)
+    
+    @staticmethod
+    def post(board_id):
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return BoardREST.delete(board_id)
+        if request_type == 'put':
+            return BoardREST.put(board_id)
+        else:
+            return BoardREST.post_operation(board_id)
 
-    def put(self, board_id):
-        args = parser.parse_args()
-        board_object = Board.query.get_or_404(board_id)
-        board_object.name = args['name']
-        board_object.columns = args['columns']
-        db.session.add(board_object)
+    @staticmethod
+    def put(board_id):
+        board_obj = Board.query.get_or_404(board_id)
+        args = request.form
+        if 'name' in args and args['name']:
+            board_obj.name = args['name']
+        db.session.add(board_obj)
         db.session.commit()
-        return BoardREST.to_json(board_object), 201
+        return BoardREST.get(board_id)
+#        args = parser.parse_args()
+#        board_object = Board.query.get_or_404(board_id)
+#        board_object.name = args['name']
+#        board_object.columns = args['columns']
+#        db.session.add(board_object)
+#        db.session.commit()
+#        return BoardREST.to_json(board_object), 201
 
     @staticmethod
     def delete(board_id):
@@ -170,6 +201,9 @@ class BoardREST(Resource):
         db.session.delete(board_object)
         
         db.session.commit()
+        
+        # return main page
+        return AllREST.get()
 
         
 class ColumnREST(Resource):
@@ -189,40 +223,62 @@ class ColumnREST(Resource):
             'notes': [NoteREST.to_json(i) for i in notes]
         }
     
-    def get(self, board, column):
-        board_object = Board.query.get_or_404(board)
-        column_object = Column.query.get_or_404(column)
+    @staticmethod
+    def get(board_id, column_id):
+        board_object = Board.query.get_or_404(board_id)
+        column_object = Column.query.get_or_404(column_id)
+        
+        # if column not in board: raise 404
+        if column_object not in Column.query.filter_by(board=board_object):
+            abort(404)
+        
         notes = Note.query.filter_by(column=column_object)
         
         request_type = request.args.get('type', '')
         if request_type == 'json':
-            return jsonify(self.to_json(column_object, notes))
+            return jsonify(ColumnREST.to_json(column_object, notes))
         else:  # HTML view
             return make_response(render_template('column.html', board=board_object, column=column_object, notes=notes))
 
-    def post(self, board, column):
-        board_object = Board.query.get_or_404(board)
-        column_object = Column.query.get_or_404(column)
+    @staticmethod
+    def post_operation(board_id, column_id):
+        board_object = Board.query.get_or_404(board_id)
+        column_object = Column.query.get_or_404(column_id)
         args = parser.parse_args()
-        note_obj = Note(name=args['name'], column_id=column, text=args['text'])
+        note_obj = Note(name=args['name'], column_id=column_id, text=args['text'])
         db.session.add(note_obj)
         db.session.commit()
-        return NoteREST.to_json(note_obj), 201
+        return ColumnREST.get(board_id, column_id)
+        
+    @staticmethod
+    def post(board_id, column_id):
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return ColumnREST.delete(board_id, column_id)
+        elif request_type == 'put':
+            return ColumnREST.put(board_id, column_id)
+        else:
+            return ColumnREST.post_operation(board_id, column_id)
     
-    def put(self, col_id):
-        args = parser.parse_args()
+    @staticmethod
+    def put(board_id, col_id):
+        args = request.form
         column_object = Column.query.get_or_404(col_id)
-        column_object.name = args['name']
-        column_object.notes = args['notes']
-        column_object.board_id = args['board_id']
+        if 'name' in args and args['name']:
+            column_object.name = args['name']
+        if 'board_id' in args and args['board_id']:
+            column_object.board_id = int(args['board_id'])
         db.session.add(column_object)
         db.session.commit()
-        return ColumnREST.to_json(column_object), 201
+#        if 'board_id' in args and int(args['board_id']):
+        return redirect("/{}/{}/".format(column_object.board_id, col_id))
+#        return ColumnREST.get(board_id, col_id)
 
     @staticmethod
-    def delete(col_id):
+    def delete(board_id, col_id):
         # get column object
-        column_object = Column.query.get_or_404(column)
+        column_object = Column.query.get_or_404(col_id)
         
         # delete notes in column
         notes = Note.query.filter_by(column=column_object)
@@ -233,6 +289,8 @@ class ColumnREST(Resource):
         db.session.delete(column_object)
         
         db.session.commit()
+        
+        return BoardREST.get(board_id)
 
     
 class NoteREST(Resource):
@@ -248,42 +306,63 @@ class NoteREST(Resource):
             'text': note.text
         }
     
-    def get(self, board, column, note):
-        board_object = Board.query.get_or_404(board)
-        column_object = Column.query.get_or_404(column)
-        note_object = Note.query.get_or_404(note)
+    @staticmethod
+    def get(board_id, column_id, note_id):
+        board_object = Board.query.get_or_404(board_id)
+        column_object = Column.query.get_or_404(column_id)
+        note_object = Note.query.get_or_404(note_id)
+        
+        # if hierarchy inconsitent
+        if column_object not in Column.query.filter_by(board=board_object):
+            abort(404)
+        if note_object not in Note.query.filter_by(column=column_object):
+            abort(404)
 
         request_type = request.args.get('type', '')
         if request_type == 'json':
-            return jsonify(self.to_json(note_object))
+            return jsonify(NoteREST.to_json(note_object))
         else:
             return make_response(render_template('note.html', board=board_object, column=column_object, note=note_object))
     
-    def put(self, note_id):
+    @staticmethod
+    def post(board_id, column_id, note_id):
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return NoteREST.delete(board_id, column_id, note_id)
+        else:
+            return NoteREST.put(board_id, column_id, note_id)
+    
+    @staticmethod
+    def put(board_id, column_id, note_id):
         """
         modify a note by changing its name, text and column
         """
-        args = parser.parse_args()
+        args = request.form
         note_obj = Note.query.get_or_404(note_id)
-        note_obj.name = args['name']
-        note_obj.text = args['text']
-        note_obj.column_id = args['column']
+        if 'name' in args and args['name']:
+            note_obj.name = args['name']
+        if 'text' in args and args['text']:
+            note_obj.text = args['text']
+        if 'column_id' in args and args['column_id']:
+            note_obj.column_id = int(args['column_id'])
         db.session.add(note_obj)
         db.session.commit()
-        return NoteREST.to_json(note_obj), 201
+        return redirect("/{}/{}/{}/".format(board_id, note_obj.column_id, note_id))
+#        return NoteREST.get(board_id, column_id, note_obj)
     
     @staticmethod
-    def delete(note_id):
+    def delete(board_id, column_id, note_id):
         note_obj = Note.query.get_or_404(note_id)
         db.session.delete(note_obj)
         db.session.commit()
-        return '', 204
+        return ColumnREST.get(board_id, column_id)
         
     
 api.add_resource(AllREST, '/')
-api.add_resource(BoardREST, '/<board>/')
-api.add_resource(ColumnREST, '/<board>/<column>/')
-api.add_resource(NoteREST, '/<board>/<column>/<note>/')
+api.add_resource(BoardREST, '/<board_id>/')
+api.add_resource(ColumnREST, '/<board_id>/<column_id>/')
+api.add_resource(NoteREST, '/<board_id>/<column_id>/<note_id>/')
 
 
 @app.errorhandler(404)

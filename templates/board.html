@@ -7,7 +7,28 @@
     <h1>board:{{board.name}}</h1>
     <ul>
        {% for col in columns %}
-        <li><a href="/{{board.id}}/{{col.id}}/">{{col.name}}</a></li>
+        <li>
+           <a href="/{{board.id}}/{{col.id}}/">{{col.name}}</a>
+           <form action="/{{board.id}}/{{col.id}}/" method="post">
+                <input type="hidden" value="delete" name="request-type">
+                <button type="submit">Delete</button>
+            </form> 
+        </li>
        {% endfor %}
     </ul>
+    
+    <form action="/{{board.id}}/" method="post">
+        <input type="text" name="name">
+        <input type="hidden" name="request-type" value="post">
+        <button type="submit">Create Column</button>
+    </form>
+    
+    <form action="/{{board.id}}/" method="post">
+        <input type="text" name="name">
+        <input type="hidden" name="request-type" value="put">
+        <button type="submit">Change Board</button>
+    </form>
+
 {% endblock %}
+
+

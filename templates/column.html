@@ -8,7 +8,27 @@
     
     <ul>
        {% for note in notes %}
-        <li><a href="/{{board.id}}/{{column.id}}/{{note.id}}/">{{note.name}}</a></li>
+        <li>
+            <a href="/{{board.id}}/{{column.id}}/{{note.id}}/">{{note.name}}</a>
+            <form action="/{{board.id}}/{{column.id}}/{{note.id}}/" method="post">
+                <input type="hidden" value="delete" name="request-type">
+                <button type="submit">Delete</button>
+            </form> 
+        </li>
        {% endfor %}
     </ul>
+    
+    <form action="/{{board.id}}/{{column.id}}/" method="post">
+        <input type="text" name="name">
+        <textarea name="text"></textarea>
+        <input type="hidden" name="request-type" value="post">
+        <button type="submit">Create Note</button>
+    </form>
+    
+    <form action="/{{board.id}}/{{column.id}}/" method="post">
+        name: <input type="text" name="name">
+        board id: <input type="number" name="board_id" value={{board.id}}>
+        <input type="hidden" name="request-type" value="put">
+        <button type="submit">Change Column</button>
+    </form>
 {% endblock %}

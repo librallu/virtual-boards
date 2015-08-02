@@ -8,4 +8,12 @@
     <p>
         {{note.text}}
     </p>
+    
+    <form action="/{{board.id}}/{{column.id}}/{{note.id}}/" method="post">
+        <input type="text" name="name">
+        <textarea name="text"></textarea>
+        <input type="number" name="column_id" value="{{column.id}}">
+        <input type="hidden" name="request-type" value="put">
+        <button type="submit">Change Note</button>
+    </form>
 {% endblock %}
