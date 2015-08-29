@@ -1,18 +1,190 @@
 PROJECT UNDER DEVELOPMENT
-========================
+=========================
+
+Overview
+========
+
+*Virtual Boards* application represents boards containing columns that contains notes.
+
+Notes can represent a shopping list, a project management board, ...
 
 
-Prerequisites
-=============
 
 
-How to run the app
-==================
 
 
-In the main folder of the application
-run :
+installation
+============
+
+get the source : 
 
 .. code:: bash
 
-	source venv/bin/activate
+    git clone URL
+
+
+
+install virtualenv
+
+.. code:: bash
+
+    pip install virtualenv --user
+
+
+launch virtualenv
+
+.. code:: bash
+
+    source venv/bin/activate
+
+
+install flask and other external flask modules
+
+.. code:: bash
+
+    pip install flask flask-script flask-sqlalchemy flask-migrate flask-restful
+
+run python command
+
+.. code:: bash
+
+    python main.py runserver
+
+
+
+
+
+API Documentation
+=================
+
+For all requests, the default output format is a HTML page.
+It is possible to ask a JSON output by adding a *get* parameter
+with name *type* and value *json*.
+
+Example :
+
+.. parsed-literal::
+    
+    http://host:port/v1/?type=json
+    
+
+In some cases (i.e. HTML forms), PUT and DELETE methods are not allowed.
+To cope with this limitation, it is possible to define in the POST request
+an optional field with name *request-type* with values *delete*, *put*
+to use DELETE and PUT methods instead.
+
+
+
+
+GET all the boards
+------------------
+
+ - URL: http://host:port/v1/boards/
+ - request method: GET
+ - parameters : None
+ 
+
+
+ADD a board
+-----------
+
+ - URL: http://host:port/v1/boards/
+ - request method: POST
+ - parameters :
+    - name: (string) name of the board
+    
+
+
+ADD a column
+------------
+
+ - URL: http://host:port/v1/columns/
+ - request method: POST
+ - parameters :
+    - name: (string) name of the column
+    
+
+ADD a note
+----------
+
+ - URL: http://host:port/v1/notes/
+ - request method: POST
+ - parameters :
+    - name: (string) name of the note
+    - content: (string) content of the note
+    
+    
+
+DELETE a board
+--------------
+
+- URL: http://host:port/v1/boards/<BOARD-ID>
+- request method: DELETE
+
+
+DELETE a column
+---------------
+
+- URL: http://host:port/v1/columns/<COLUMN-ID>
+- request method: DELETE
+
+
+DELETE a note
+-------------
+
+- URL: http://host:port/v1/notes/<NOTE-ID>
+- request method: DELETE
+
+
+MODIFY a board
+--------------
+
+- URL: http://host:port/v1/boards/<BOARD-ID>
+- request method: PUT
+- optional parameters :
+    - name: (string) name of the board
+
+
+MODIFY a column
+---------------
+
+- URL: http://host:port/v1/columns/<COLUMN-ID>
+- request method: PUT
+- optional parameters :
+    - name: (string) name of the column
+
+
+MODIFY a note
+-------------
+
+- URL: http://host:port/v1/notes/<NOTE-ID>
+- request method: PUT
+- optional parameters :
+    - name: (string) name of the note
+    - content: (string) content of the note
+
+
+add a column in a board
+-----------------------
+
+- URL: http://host:port/v1/boards-content/
+- request method: POST
+- parameters:
+    - board-id: id of the board
+    - column-id: id of the column
+
+
+add a note in a board
+---------------------
+
+- URL: http://host:port/v1/columns-content/
+- request method: POST
+- parameters:
+    - column-id: id of the column
+    - note-id: id of the note
+
+
+TODO list
+=========
+
+- integrate in the documentation CURL calls
