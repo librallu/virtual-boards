@@ -164,7 +164,7 @@ MODIFY a note
     - content: (string) content of the note
 
 
-add a column in a board
+ADD a column in a board
 -----------------------
 
 - URL: http://host:port/v1/boards-content/
@@ -174,11 +174,31 @@ add a column in a board
     - column-id: id of the column
 
 
-add a note in a board
----------------------
+ADD a note in a column
+----------------------
 
 - URL: http://host:port/v1/columns-content/
 - request method: POST
+- parameters:
+    - column-id: id of the column
+    - note-id: id of the note
+
+
+DELETE a column in a board
+--------------------------
+
+- URL: http://host:port/v1/boards-content/
+- request method: DELETE
+- parameters:
+    - board-id: id of the board
+    - column-id: id of the column
+    
+
+DELETE a note in a column
+-------------------------
+
+- URL: http://host:port/v1/columns-content/
+- request method: DELETE
 - parameters:
     - column-id: id of the column
     - note-id: id of the note
