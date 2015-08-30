@@ -358,11 +358,58 @@ class NoteREST(Resource):
         db.session.commit()
         return ColumnREST.get(board_id, column_id)
         
+
+class BoardsEP(Resource):
     
-api.add_resource(AllREST, '/')
-api.add_resource(BoardREST, '/<board_id>/')
-api.add_resource(ColumnREST, '/<board_id>/<column_id>/')
-api.add_resource(NoteREST, '/<board_id>/<column_id>/<note_id>/')
+    @staticmethod
+    def to_json():
+        """
+        :return: dict object representing a column in json.
+        """
+        boards = Board.query.all()
+        columns = Column.query.all()
+        notes = Note.query.all()
+        board_interactions = [{
+            'column': i.id,
+            'board': i.board_id
+        } for i in columns ]
+        column_interactions = [{
+            'note': i.id,
+            'column': i.column_id
+        } for i in notes ]
+        
+        return {
+            'boards': [{
+                        'id': i.id,
+                        'name': i.name
+                    } for i in boards ],
+            'columns': [{
+                        'id': i.id,
+                        'name': i.name
+                    } for i in columns ],
+            'notes': [{
+                        'id': i.id,
+                        'name': i.name,
+                        'text': i.text
+                } for i in notes ],
+            'board-interactions': board_interactions,
+            'column-interactions': column_interactions,
+        }
+    
+    @staticmethod
+    def get():
+        request_type = request.args.get('type', '')
+        if request_type == 'json':
+            return jsonify(BoardsEP.to_json())
+        else:
+            return make_response("hello")
+
+        
+api.add_resource(BoardsEP, '/v1/boards/')
+#api.add_resource(AllREST, '/')
+#api.add_resource(BoardREST, '/<board_id>/')
+#api.add_resource(ColumnREST, '/<board_id>/<column_id>/')
+#api.add_resource(NoteREST, '/<board_id>/<column_id>/<note_id>/')
 
 
 @app.errorhandler(404)
