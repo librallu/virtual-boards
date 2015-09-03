@@ -403,6 +403,29 @@ class BoardsEP(Resource):
             return jsonify(BoardsEP.to_json())
         else:
             return make_response("hello")
+    
+    @staticmethod
+    def post():
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            pass
+        elif request_type == 'put':
+            pass
+        else:  # post request
+            args = parser.parse_args()
+            name = args.get('name', '')
+            if name:
+                # check if there is no board with this name
+                if Board.query.filter_by(name=name).first():
+                    return {'code': 400, 'description': 'name already exists'}
+                
+                board_obj = Board(name=name)
+                db.session.add(board_obj)
+                db.session.commit()
+                return {'code': 201, 'description': 'created'}
+            else:
+                return {'code': 400, 'description': 'some fields are missing'}
 
         
 api.add_resource(BoardsEP, '/v1/boards/')
