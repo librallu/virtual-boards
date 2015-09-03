@@ -452,6 +452,26 @@ class BoardsEP(Resource):
             return {'code': 400, 'description': 'some fields are missing', 'missing': 'name'}
 
     @staticmethod
+    def put():
+        args = request.form
+        id = args.get('id', '')
+        if id:
+            board_obj = Board.query.filter_by(id=id).first()
+            if not board_obj:
+                return {'code': 400, 'description': 'No resource found', 'asked': id}
+            
+            name = args.get('name', '')
+            if name:
+                board_obj.name = name
+            else:
+                return {'code': 304, 'description': 'not modified'}
+            db.session.add(board_obj)
+            db.session.commit()
+            return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'id'}
+        
+    @staticmethod
     def post():
         args = request.form
         request_type = args.get('request-type', '')
