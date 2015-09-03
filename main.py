@@ -42,6 +42,19 @@ class Board(db.Model):
     def __repr__(self):
         return '<Board {}>'.format(self.name)
 
+class BoardInteraction(db.Model):
+    """Represents a board-column interaction"""
+    __tablename__ = 'boardInteractions'
+    id = db.Column(db.Integer, primary_key=True)
+    board = db.Column(db.Integer, db.ForeignKey('boards.id'))
+    column = db.Column(db.Integer, db.ForeignKey('columns.id'))
+
+class ColumnInteraction(db.Model):
+    """Represents a column-note interaction"""
+    ___tablename__ = 'columnInteractions'
+    id = db.Column(db.Integer, primary_key=True)
+    column = db.Column(db.Integer, db.ForeignKey('columns.id'))
+    note = db.Column(db.Integer, db.ForeignKey('notes.id'))
 
 class Column(db.Model):
     """Represents a column object.
@@ -370,13 +383,13 @@ class BoardsEP(Resource):
         columns = Column.query.all()
         notes = Note.query.all()
         board_interactions = [{
-            'column': i.id,
-            'board': i.board_id
-        } for i in columns ]
+            'column': i.column,
+            'board': i.board
+        } for i in BoardInteraction.query.all() ]
         column_interactions = [{
-            'note': i.id,
-            'column': i.column_id
-        } for i in notes ]
+            'note': i.note,
+            'column': i.column
+        } for i in ColumnInteraction.query.all() ]
         
         return {
             'boards': [{
@@ -405,28 +418,50 @@ class BoardsEP(Resource):
             return make_response("hello")
     
     @staticmethod
+    def delete():
+        args = request.form
+        id = args.get('id', '')
+        if id:
+            board_obj = Board.query.filter_by(id=id).first()
+            if board_obj:
+                db.session.delete(board_obj)
+                # delete board relations if needed
+                # TODO
+                
+                db.session.commit()
+                return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+            else:
+                return {'code': 400, 'description': 'No resource found', 'asked': id}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'id'}
+        
+    @staticmethod
+    def post_method():
+        args = request.form
+        name = args.get('name', '')
+        if name:
+            # check if there is no board with this name
+            if Board.query.filter_by(name=name).first():
+                return {'code': 400, 'description': 'name already exists'}
+
+            board_obj = Board(name=name)
+            db.session.add(board_obj)
+            db.session.commit()
+            return {'code': 201, 'description': 'created'}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'name'}
+
+    @staticmethod
     def post():
         args = request.form
         request_type = args.get('request-type', '')
         if request_type == 'delete':
-            pass
+            return BoardsEP.delete()
         elif request_type == 'put':
-            pass
+            return BoardsEP.put()
         else:  # post request
-            args = parser.parse_args()
-            name = args.get('name', '')
-            if name:
-                # check if there is no board with this name
-                if Board.query.filter_by(name=name).first():
-                    return {'code': 400, 'description': 'name already exists'}
-                
-                board_obj = Board(name=name)
-                db.session.add(board_obj)
-                db.session.commit()
-                return {'code': 201, 'description': 'created'}
-            else:
-                return {'code': 400, 'description': 'some fields are missing'}
-
+            return BoardsEP.post_method()
+            
         
 api.add_resource(BoardsEP, '/v1/boards/')
 #api.add_resource(AllREST, '/')
