@@ -481,9 +481,80 @@ class BoardsEP(Resource):
             return BoardsEP.put()
         else:  # post request
             return BoardsEP.post_method()
+
+
+        
+class ColumnsEP(Resource):
+    
+    @staticmethod
+    def post_method():
+        args = request.form
+        name = args.get('name', '')
+        if name:
+            # check if there is no board with this name
+            if Column.query.filter_by(name=name).first():
+                return {'code': 400, 'description': 'name already exists'}
+
+            col_obj = Column(name=name)
+            db.session.add(col_obj)
+            db.session.commit()
+            return {'code': 201, 'description': 'created'}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'name'}
+    
+    @staticmethod
+    def delete():
+        args = request.form
+        id = args.get('id', '')
+        if id:
+            col_obj = Column.query.filter_by(id=id).first()
+            if col_obj:
+                db.session.delete(col_obj)
+                # delete board and column relations if needed
+                # TODO
+                
+                db.session.commit()
+                return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+            else:
+                return {'code': 400, 'description': 'No resource found', 'asked': id}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'id'}
+
+    @staticmethod
+    def put():
+        args = request.form
+        id = args.get('id', '')
+        if id:
+            col_obj = Column.query.filter_by(id=id).first()
+            if not col_obj:
+                return {'code': 400, 'description': 'No resource found', 'asked': id}
             
+            name = args.get('name', '')
+            if name:
+                col_obj.name = name
+            else:
+                return {'code': 304, 'description': 'not modified'}
+            db.session.add(col_obj)
+            db.session.commit()
+            return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+        else:
+            return {'code': 400, 'description': 'some fields are missing', 'missing': 'id'}
+    
+    @staticmethod
+    def post():
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return ColumnsEP.delete()
+        elif request_type == 'put':
+            return ColumnsEP.put()
+        else:
+            return ColumnsEP.post_method()
+
+        
         
 api.add_resource(BoardsEP, '/v1/boards/')
+api.add_resource(ColumnsEP, '/v1/columns/')
 #api.add_resource(AllREST, '/')
 #api.add_resource(BoardREST, '/<board_id>/')
 #api.add_resource(ColumnREST, '/<board_id>/<column_id>/')
