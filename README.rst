@@ -52,6 +52,22 @@ run python command
 
 
 
+create database
+---------------
+
+.. code:: bash
+
+    python main.py db init
+
+.. code:: bash
+
+    python main.py db migrate
+    
+.. code:: bash
+
+    python main.py db upgrade
+
+
 
 
 API Documentation
@@ -66,7 +82,18 @@ Example :
 .. parsed-literal::
     
     http://host:port/v1/?type=json
-    
+
+output :
+
+.. parsed-literal::
+
+    {
+      "board-interactions": [...],
+      "boards": [...],
+      "column-interactions": [...],
+      "columns": [...],
+      "notes": [...]
+    }
 
 In some cases (i.e. HTML forms), PUT and DELETE methods are not allowed.
 To cope with this limitation, it is possible to define in the POST request
@@ -82,6 +109,12 @@ GET all the boards
  - URL: http://host:port/v1/boards/
  - request method: GET
  - parameters : None
+ 
+ Usage Example: 
+ 
+ .. parsed-literal::
+ 
+    curl <ROOT URL>/v1/boards/?type=json
  
 
 
@@ -112,7 +145,23 @@ ADD a note
  - parameters :
     - name: (string) name of the note
     - content: (string) content of the note
+
+
+usage example:
+
+.. parsed-literal::
+
+    curl 127.0.0.1:5000/v1/notes/ -X POST --data "name=test&text=description"
+
+output:
+
+.. parsed-literal::
     
+    {
+        "code": 201, 
+        "description": "created"
+    }
+
     
 
 DELETE a board
