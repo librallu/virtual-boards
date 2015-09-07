@@ -679,14 +679,75 @@ class BoardsContentEP(Resource):
             return BoardsContentEP.delete()
         else:
             return BoardsContentEP.post_method()
-        
+
+
+class ColumnsContentEP(Resource):
+    
+    @staticmethod
+    def delete():
+        args = request.form
+        column = args.get('column', '')
+        note = args.get('note', '')
+        if note and column:
+            # check if note or column corresponds to correct id
+            if not Note.query.filter_by(id=note).first():
+                return {'code': 400, 'description': 'note with id {} does not exist'.format(note)}
+            if not Column.query.filter_by(id=column).first():
+                return {'code': 400, 'description': 'column with id {} does not exist'.format(column)}
+            
+            content_obj = ColumnsContent.query.filter_by(note=note, column=column).first()
+            db.session.delete(content_obj)
+            db.session.commit()
+            return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+        else:
+            missing = []
+            if not note:
+                missing.append('note')
+            if not column:
+                missing.append('column')
+            return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+    
+    @staticmethod
+    def post_method():
+        args = request.form
+        note = args.get('note', '')
+        column = args.get('column', '')
+        if note and column:
+            # check if note or column corresponds to correct id
+            if not Note.query.filter_by(id=note).first():
+                return {'code': 400, 'description': 'note with id {} does not exist'.format(note)}
+            if not Column.query.filter_by(id=column).first():
+                return {'code': 400, 'description': 'column with id {} does not exist'.format(column)}
+            
+            if ColumnsContent.query.filter_by(note=note, column=column).first():
+                return {'code': 400, 'description': 'relationship already exists between note {} and column {}'.format(note, column)}
+            content_obj = ColumnsContent(note=note, column=column)
+            db.session.add(content_obj)
+            db.session.commit()
+            return {'code': 201, 'description': 'created'}
+        else:
+            missing = []
+            if not note:
+                missing.append('note')
+            if not column:
+                missing.append('column')
+            return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+    
+    @staticmethod
+    def post():
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return ColumnsContentEP.delete()
+        else:
+            return ColumnsContentEP.post_method()
         
         
 api.add_resource(BoardsEP, '/v1/boards/')
 api.add_resource(ColumnsEP, '/v1/columns/')
 api.add_resource(NotesEP, '/v1/notes/')
 api.add_resource(BoardsContentEP, '/v1/boards-content/')
-
+api.add_resource(ColumnsContentEP, '/v1/columns-content/')
 
 #api.add_resource(AllREST, '/')
 #api.add_resource(BoardREST, '/<board_id>/')
