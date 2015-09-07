@@ -37,21 +37,21 @@ class Board(db.Model):
     __tablename__ = 'boards'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    columns = db.relationship('Column', backref='board')
+#    columns = db.relationship('Column', backref='board')
     
     def __repr__(self):
         return '<Board {}>'.format(self.name)
 
-class BoardInteraction(db.Model):
+class BoardsContent(db.Model):
     """Represents a board-column interaction"""
-    __tablename__ = 'boardInteractions'
+    __tablename__ = 'boardsContent'
     id = db.Column(db.Integer, primary_key=True)
     board = db.Column(db.Integer, db.ForeignKey('boards.id'))
     column = db.Column(db.Integer, db.ForeignKey('columns.id'))
 
-class ColumnInteraction(db.Model):
+class ColumnsContent(db.Model):
     """Represents a column-note interaction"""
-    ___tablename__ = 'columnInteractions'
+    ___tablename__ = 'columnsContent'
     id = db.Column(db.Integer, primary_key=True)
     column = db.Column(db.Integer, db.ForeignKey('columns.id'))
     note = db.Column(db.Integer, db.ForeignKey('notes.id'))
@@ -62,8 +62,8 @@ class Column(db.Model):
     __tablename__ = 'columns'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    notes = db.relationship('Note', backref='column')
-    board_id = db.Column(db.Integer, db.ForeignKey('boards.id'))
+#    notes = db.relationship('Note', backref='column')
+#    board_id = db.Column(db.Integer, db.ForeignKey('boards.id'))
     
     def __repr__(self):
         return '<Col {}>'.format(self.name)
@@ -75,7 +75,7 @@ class Note(db.Model):
     __tablename__ = 'notes'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    column_id = db.Column(db.Integer, db.ForeignKey('columns.id'))
+#    column_id = db.Column(db.Integer, db.ForeignKey('columns.id'))
     text = db.Column(db.Text)
     
     def __repr__(self):
@@ -382,14 +382,14 @@ class BoardsEP(Resource):
         boards = Board.query.all()
         columns = Column.query.all()
         notes = Note.query.all()
-        board_interactions = [{
+        boards_content = [{
             'column': i.column,
             'board': i.board
-        } for i in BoardInteraction.query.all() ]
-        column_interactions = [{
+        } for i in BoardsContent.query.all() ]
+        columns_content = [{
             'note': i.note,
             'column': i.column
-        } for i in ColumnInteraction.query.all() ]
+        } for i in ColumnsContent.query.all() ]
         
         return {
             'boards': [{
@@ -405,8 +405,8 @@ class BoardsEP(Resource):
                         'name': i.name,
                         'text': i.text
                 } for i in notes ],
-            'board-interactions': board_interactions,
-            'column-interactions': column_interactions,
+            'boards-content': boards_content,
+            'columns-content': columns_content,
         }
     
     @staticmethod
@@ -617,11 +617,77 @@ class NotesEP(Resource):
             return NotesEP.put()
         else:
             return NotesEP.post_method()
+
+
+class BoardsContentEP(Resource):
+    
+    @staticmethod
+    def delete():
+        args = request.form
+        board = args.get('board', '')
+        column = args.get('column', '')
+        if board and column:
+            # check if board or column corresponds to correct id
+            if not Board.query.filter_by(id=board).first():
+                return {'code': 400, 'description': 'board with id {} does not exist'.format(board)}
+            if not Column.query.filter_by(id=column).first():
+                return {'code': 400, 'description': 'column with id {} does not exist'.format(column)}
+            
+            content_obj = BoardsContent.query.filter_by(board=board, column=column).first()
+            db.session.delete(content_obj)
+            db.session.commit()
+            return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
+        else:
+            missing = []
+            if not board:
+                missing.append('board')
+            if not column:
+                missing.append('column')
+            return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+    
+    @staticmethod
+    def post_method():
+        args = request.form
+        board = args.get('board', '')
+        column = args.get('column', '')
+        if board and column:
+            # check if board or column corresponds to correct id
+            if not Board.query.filter_by(id=board).first():
+                return {'code': 400, 'description': 'board with id {} does not exist'.format(board)}
+            if not Column.query.filter_by(id=column).first():
+                return {'code': 400, 'description': 'column with id {} does not exist'.format(column)}
+            
+            if BoardsContent.query.filter_by(board=board, column=column).first():
+                return {'code': 400, 'description': 'relationship already exists between board {} and column {}'.format(board, column)}
+            content_obj = BoardsContent(board=board, column=column)
+            db.session.add(content_obj)
+            db.session.commit()
+            return {'code': 201, 'description': 'created'}
+        else:
+            missing = []
+            if not board:
+                missing.append('board')
+            if not column:
+                missing.append('column')
+            return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+    
+    @staticmethod
+    def post():
+        args = request.form
+        request_type = args.get('request-type', '')
+        if request_type == 'delete':
+            return BoardsContentEP.delete()
+        else:
+            return BoardsContentEP.post_method()
+        
         
         
 api.add_resource(BoardsEP, '/v1/boards/')
 api.add_resource(ColumnsEP, '/v1/columns/')
 api.add_resource(NotesEP, '/v1/notes/')
+api.add_resource(BoardsContentEP, '/v1/boards-content/')
+
+
 #api.add_resource(AllREST, '/')
 #api.add_resource(BoardREST, '/<board_id>/')
 #api.add_resource(ColumnREST, '/<board_id>/<column_id>/')
