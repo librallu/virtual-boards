@@ -36,7 +36,7 @@ class Board(db.Model):
     """
     __tablename__ = 'boards'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
+    name = db.Column(db.String(64))
 #    columns = db.relationship('Column', backref='board')
     
     def __repr__(self):
@@ -61,7 +61,7 @@ class Column(db.Model):
     """
     __tablename__ = 'columns'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
+    name = db.Column(db.String(64))
 #    notes = db.relationship('Note', backref='column')
 #    board_id = db.Column(db.Integer, db.ForeignKey('boards.id'))
     
@@ -74,7 +74,7 @@ class Note(db.Model):
     """
     __tablename__ = 'notes'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
+    name = db.Column(db.String(64))
 #    column_id = db.Column(db.Integer, db.ForeignKey('columns.id'))
     text = db.Column(db.Text)
     
@@ -136,6 +136,7 @@ class BoardsEP(Resource):
             board_obj = Board.query.filter_by(id=id).first()
             if board_obj:
                 # delete board relations if needed
+                # needs to be before deleting note because checked in delete_call
                 board_content = BoardsContent.query.filter_by(board=id)
                 for content in board_content:
                     BoardsContentEP.delete_call(id, content.column)
@@ -220,8 +221,9 @@ class ColumnsEP(Resource):
         if id:
             col_obj = Column.query.filter_by(id=id).first()
             if col_obj:
-                
+            
                 # delete board content if needed
+                # needs to be before deleting note because checked in delete_call
                 board_content = BoardsContent.query.filter_by(column=id)
                 for content in board_content:
                     BoardsContentEP.delete_call(content.board, id)
@@ -294,9 +296,14 @@ class NotesEP(Resource):
         if id:
             note_obj = Note.query.filter_by(id=id).first()
             if note_obj:
-                db.session.delete(note_obj)
                 # delete column relations if needed
-                # TODO
+                # needs to be before deleting note because checked in delete_call
+                column_content = ColumnsContent.query.filter_by(note=id)
+                for content in column_content:
+                    ColumnsContentEP.delete_call(content.column, id)
+                
+                db.session.delete(note_obj)
+
                 
                 db.session.commit()
                 return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
