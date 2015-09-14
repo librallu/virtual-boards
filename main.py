@@ -135,10 +135,14 @@ class BoardsEP(Resource):
         if id:
             board_obj = Board.query.filter_by(id=id).first()
             if board_obj:
-                db.session.delete(board_obj)
                 # delete board relations if needed
-                # TODO
+                board_content = BoardsContent.query.filter_by(board=id)
+                for content in board_content:
+                    BoardsContentEP.delete_call(id, content.column)
                 
+                # delete board object
+                db.session.delete(board_obj)
+
                 db.session.commit()
                 return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
             else:
@@ -333,10 +337,7 @@ class NotesEP(Resource):
 class BoardsContentEP(Resource):
     
     @staticmethod
-    def delete():
-        args = request.form
-        board = args.get('board', '')
-        column = args.get('column', '')
+    def delete_call(board, column):
         if board and column:
             # check if board or column corresponds to correct id
             if not Board.query.filter_by(id=board).first():
@@ -355,6 +356,13 @@ class BoardsContentEP(Resource):
             if not column:
                 missing.append('column')
             return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+    
+    @staticmethod
+    def delete():
+        args = request.form
+        board = args.get('board', '')
+        column = args.get('column', '')
+        return BoardsContentEP.delete_call(board, column)
     
     @staticmethod
     def post_method():
@@ -395,10 +403,7 @@ class BoardsContentEP(Resource):
 class ColumnsContentEP(Resource):
     
     @staticmethod
-    def delete():
-        args = request.form
-        column = args.get('column', '')
-        note = args.get('note', '')
+    def delete_call(column, note):
         if note and column:
             # check if note or column corresponds to correct id
             if not Note.query.filter_by(id=note).first():
@@ -417,6 +422,14 @@ class ColumnsContentEP(Resource):
             if not column:
                 missing.append('column')
             return {'code': 400, 'description': 'some fields are missing', 'missing': ', '.join(missing)}
+        
+    @staticmethod
+    def delete():
+        args = request.form
+        column = args.get('column', '')
+        note = args.get('note', '')
+        return ColumnsContentEP.delete_call(column, note)
+
     
     @staticmethod
     def post_method():
