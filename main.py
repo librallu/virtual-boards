@@ -220,9 +220,18 @@ class ColumnsEP(Resource):
         if id:
             col_obj = Column.query.filter_by(id=id).first()
             if col_obj:
+                
+                # delete board content if needed
+                board_content = BoardsContent.query.filter_by(column=id)
+                for content in board_content:
+                    BoardsContentEP.delete_call(content.board, id)
+                
+                # delete column content if needed
+                column_content = ColumnsContent.query.filter_by(column=id)
+                for content in column_content:
+                    ColumnsContentEP.delete_call(id, content.note)
+                
                 db.session.delete(col_obj)
-                # delete board and column relations if needed
-                # TODO
                 
                 db.session.commit()
                 return {'code': 204, 'description': 'No content: The request was processed successfully, but no response body is needed.'}
