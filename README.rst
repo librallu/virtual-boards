@@ -70,8 +70,8 @@ create database
 
 
 
-API Documentation
-=================
+REST API Documentation
+======================
 
 For all requests, the default output format is a HTML page.
 It is possible to ask a JSON output by adding a *get* parameter
@@ -257,3 +257,5 @@ TODO list
 =========
 
 - integrate in the documentation CURL calls
+- make html5+js client with polymer
+- prototype of droppelganger drag and drop library for mobiles (can be simple in the first version)
