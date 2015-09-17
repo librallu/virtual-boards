@@ -125,7 +125,14 @@ ADD a board
  - request method: POST
  - parameters :
     - name: (string) name of the board
-    
+
+exemple:
+
+.. parsed-literal::
+
+    curl -X POST <HOST>/v1/boards/ --data "name=new-board"
+    {"code": 201, "description": "created"}
+
 
 
 ADD a column
@@ -135,6 +142,14 @@ ADD a column
  - request method: POST
  - parameters :
     - name: (string) name of the column
+
+exemple:
+
+.. parsed-literal::
+
+    curl -X POST <HOST>/v1/columns/ --data "name=new-column"
+    {"code": 201, "description": "created"}
+
     
 
 ADD a note
@@ -151,7 +166,7 @@ usage example:
 
 .. parsed-literal::
 
-    curl 127.0.0.1:5000/v1/notes/ -X POST --data "name=test&text=description"
+    curl <HOST>/v1/notes/ -X POST --data "name=test&text=description"
 
 output:
 
@@ -167,8 +182,16 @@ output:
 DELETE a board
 --------------
 
-- URL: http://host:port/v1/boards/<BOARD-ID>
+- URL: http://host:port/v1/boards/
 - request method: DELETE
+
+example:
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/boards/ --data "id=2"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
+
 
 
 DELETE a column
@@ -178,11 +201,26 @@ DELETE a column
 - request method: DELETE
 
 
+example:
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/columns/ --data "id=2"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
+
+
 DELETE a note
 -------------
 
 - URL: http://host:port/v1/notes/<NOTE-ID>
 - request method: DELETE
+
+example:
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/notes/ --data "id=2"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 
 MODIFY a board
