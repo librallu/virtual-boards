@@ -230,6 +230,13 @@ MODIFY a board
 - request method: PUT
 - optional parameters :
     - name: (string) name of the board
+    
+example:
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/boards/ --data "id=2&name=modified_name"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 
 MODIFY a column
@@ -239,6 +246,13 @@ MODIFY a column
 - request method: PUT
 - optional parameters :
     - name: (string) name of the column
+    
+example:
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/columns/ --data "id=2&name=modified_name"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 
 MODIFY a note
@@ -249,6 +263,11 @@ MODIFY a note
 - optional parameters :
     - name: (string) name of the note
     - content: (string) content of the note
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/notes/ --data "id=2&name=modified_name"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 
 ADD a column in a board
