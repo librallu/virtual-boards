@@ -279,6 +279,10 @@ ADD a column in a board
     - board-id: id of the board
     - column-id: id of the column
 
+.. parsed-literal::
+
+    curl -X POST <HOST>/v1/boards-content/ --data "board-id=1&column-id=1"
+    {"code": 201, "description": "created"}
 
 ADD a note in a column
 ----------------------
@@ -289,6 +293,10 @@ ADD a note in a column
     - column-id: id of the column
     - note-id: id of the note
 
+.. parsed-literal::
+
+    curl -X POST <HOST>/v1/columns-content/ --data "note-id=1&column-id=1"
+    {"code": 201, "description": "created"}
 
 DELETE a column in a board
 --------------------------
@@ -298,7 +306,11 @@ DELETE a column in a board
 - parameters:
     - board-id: id of the board
     - column-id: id of the column
-    
+
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/boards-content/ --data "board-id=1&column-id=1"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 DELETE a note in a column
 -------------------------
@@ -309,6 +321,10 @@ DELETE a note in a column
     - column-id: id of the column
     - note-id: id of the note
 
+.. parsed-literal::
+
+    curl -X DELETE <HOST>/v1/columns-content/ --data "note-id=1&column-id=1"
+    {"code": 204, "description": "No content: The request was processed successfully, but no response body is needed."}
 
 TODO list
 =========
